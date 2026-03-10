@@ -1,0 +1,102 @@
+CREATE DATABASE IF NOT EXISTS messmate;
+USE messmate;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(120) UNIQUE NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  room_no VARCHAR(30),
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'student') NOT NULL DEFAULT 'student',
+  plan_type VARCHAR(50) DEFAULT 'monthly',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS meals (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  date DATE UNIQUE NOT NULL,
+  breakfast VARCHAR(255),
+  lunch VARCHAR(255),
+  dinner VARCHAR(255),
+  image_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS skip_meals (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  date DATE NOT NULL,
+  meal_type ENUM('breakfast', 'lunch', 'dinner') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_skip (user_id, date, meal_type),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  status ENUM('paid', 'pending', 'failed', 'refund') DEFAULT 'paid',
+  notes VARCHAR(255),
+  date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS complaints (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  message TEXT NOT NULL,
+  status ENUM('open', 'in_progress', 'resolved') DEFAULT 'open',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS food_suggestions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  suggestion VARCHAR(255) NOT NULL,
+  votes INT DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS ratings (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  meal_id INT NOT NULL,
+  taste TINYINT NOT NULL,
+  quantity TINYINT NOT NULL,
+  quality TINYINT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS delivery_tracking (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  delivery_person VARCHAR(120),
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  status ENUM('assigned', 'on_the_way', 'delivered') DEFAULT 'assigned',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  sender_id INT NOT NULL,
+  room VARCHAR(120) NOT NULL DEFAULT 'general',
+  message TEXT NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT,
+  title VARCHAR(120) NOT NULL,
+  message VARCHAR(255) NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
